@@ -53,5 +53,6 @@ ApiDisplayResponse parseResponse_apiDisplay(String &payload) {
       .temp_profile = u32TP,
       .reset_firmware = doc["reset_firmware"],
       .special_function = parseSpecialFunction(special_function_str),
-      .action = doc["action"] | ""};
+      .action = doc["action"] | "",
+      .mosir_hot_mode = doc["mosir_hot_mode"] | false};
 }

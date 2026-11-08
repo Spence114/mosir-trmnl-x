@@ -199,6 +199,10 @@ void iqs323_task_read_snapshot(touchbar_snapshot_t *out);
  * them: unlike the snapshot, a touch that starts and ends between two reads still shows.
  */
 uint8_t iqs323_task_take_touch_starts(void);
+#ifdef HOT_MODE
+bool iqs323_task_hot_gestures(bool enable);
+bool iqs323_task_take_hot_gesture(uint8_t *channel, bool *held);
+#endif
 
 /**
  * @brief Copies out the snapshot as it was at wake-stub validation time, not live

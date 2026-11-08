@@ -131,6 +131,13 @@ static void dispatch_touchbar_intent(const touchbar_resolution_t &resolved) {
 
 void process_iqs323_data(void) { dispatch_touchbar_intent(touchbar_resolve_intent()); }
 
+#ifdef HOT_MODE
+void touchbar_dispatch_live(uint8_t channel, bool held) {
+  const touchbar_intent_t intents[] = {touchbar_intent_t::BACK, touchbar_intent_t::MIDDLE, touchbar_intent_t::NEXT};
+  if (channel < 3) dispatch_touchbar_intent({intents[channel], held});
+}
+#endif
+
 bool touchbar_poll_ship_check(void) {
   static TouchbarHoldTracker middle_hold(1 << 1, TOUCHBAR_SHIP_CHECK_HOLD_MS);
   touchbar_snapshot_t snap;

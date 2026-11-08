@@ -60,6 +60,27 @@ static touchbar_snapshot_t g_wake_stub_snapshot = {
 static bool g_wake_stub_snapshot_valid = false;
 // Channels (bit n: channel n) whose touch started since iqs323_task_take_touch_starts(), under iqs323_mutex
 static uint8_t g_touch_starts = 0;
+#ifdef HOT_MODE
+#include <mosir_hot_policy.h>
+static Mosir::Gestures hot_gestures;
+static bool hot_gestures_enabled = false;
+
+bool iqs323_task_hot_gestures(bool enable) {
+    if (!iqs323_mutex || xSemaphoreTake(iqs323_mutex, pdMS_TO_TICKS(50)) != pdTRUE) return false;
+    hot_gestures_enabled = enable;
+    hot_gestures.reset();
+    xSemaphoreGive(iqs323_mutex);
+    return true;
+}
+bool iqs323_task_take_hot_gesture(uint8_t *channel, bool *held) {
+    if (!iqs323_mutex || xSemaphoreTake(iqs323_mutex, pdMS_TO_TICKS(50)) != pdTRUE) return false;
+    Mosir::Gesture event;
+    bool found = hot_gestures.take(event);
+    if (found) { *channel = event.channel; *held = event.held; }
+    xSemaphoreGive(iqs323_mutex);
+    return found;
+}
+#endif
 
 // Sole accessor of the IQS323 object; other files use the snapshot/request API below.
 IQS323 iqs323;
@@ -318,6 +339,14 @@ static void iqs323_publish_snapshot(void)
         iqs323.IQSMemoryMap.SYSTEM_STATUS[0], iqs323.IQSMemoryMap.SYSTEM_STATUS[1]);
 
     g_touchbar_snapshot.last_updated_ms = millis();
+#ifdef HOT_MODE
+    if (hot_gestures_enabled) {
+        uint8_t mask = (g_touchbar_snapshot.ch0_touch ? 1 : 0) |
+                       (g_touchbar_snapshot.ch1_touch ? 2 : 0) |
+                       (g_touchbar_snapshot.ch2_touch ? 4 : 0);
+        hot_gestures.poll(mask, g_touchbar_snapshot.last_updated_ms);
+    }
+#endif
 }
 
 void iqs323_task_read_snapshot(touchbar_snapshot_t *out)

@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <mosir_hot.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <app_logger.h>
@@ -388,6 +389,8 @@ void bl_init(void)
   MSG error_screen = requestErrorScreen(request_result, WiFi.RSSI() <= WIFI_CONNECTION_RSSI);
   if (error_screen != NONE)
     showMessageWithLogo(error_screen);
+
+  mosir_hot_run(request_result);
 
   // display go to sleep
   Log_info("%s [%d]: BL done, going to sleep...", __FILE__, __LINE__);

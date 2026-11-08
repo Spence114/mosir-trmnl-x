@@ -22,6 +22,9 @@ FirmwareUpdateService::FirmwareUpdateService(Persistence &persistence, Clock &cl
 
 bool FirmwareUpdateService::isUpdateDue(bool update_firmware, const String &firmware_url) {
   Log_info("%s [%d]: update_firmware: %d\r\n", __FILE__, __LINE__, update_firmware);
+#ifdef MOSIR_DISABLE_OTA
+  return false; // custom builds are replaced deliberately over USB, not by the cloud
+#endif
   if (!update_firmware) return false;
 
   Log_info("%s [%d]: update firmware. Check URL\r\n", __FILE__, __LINE__);

@@ -34,6 +34,7 @@ void setup() {
       bool modemFlashed = checkIfModemFlashed();
 
       if (!modemFlashed) {
+#ifndef MOSIR_NO_RADIO_FLASH
         Serial.println("[MODEM] Resetting modem...");
         modem_reset_target();
         delay(500);  // let modem reach bootloader
@@ -50,6 +51,9 @@ void setup() {
           display_show_msg(const_cast<uint8_t *>(logo_medium), MODEM_FLASH_FAILED, flashError.c_str());
           delay(5000);
         }
+#else
+        Serial.println("[MOSIR] Factory radio flashing disabled; existing radio firmware retained.");
+#endif
       } else {
         Serial.println("[MODEM] Already flashed, skipping...");
       }

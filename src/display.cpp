@@ -2759,3 +2759,53 @@ void display_sleep(void)
     bbep.deInit();
 #endif
 }
+
+#if defined(BOARD_TRMNL_X) && defined(HOT_MODE)
+#include <mosir_hot.h>
+#include <mosir_hot_policy.h>
+#include <png.h>
+#include <memory>
+#include <new>
+#ifndef HOT_MAX_PARTIALS
+#define HOT_MAX_PARTIALS 40
+#endif
+#ifndef HOT_IDLE_CLEAN_MS
+#define HOT_IDLE_CLEAN_MS 20000
+#endif
+static Mosir::RefreshBudget hot_refresh;
+void display_hot_invalidate() { hot_refresh.invalidate(); }
+
+static bool hot_refresh_panel(bool forceFull) {
+  bool full = forceFull || hot_refresh.full(millis(), HOT_MAX_PARTIALS, HOT_IDLE_CLEAN_MS) ||
+              bbep.getPreviousMode() != BB_MODE_1BPP;
+  int rc = full ? bbep.fullUpdate(CLEAR_FAST, false) : bbep.partialUpdate(false);
+  if (rc != BBEP_SUCCESS) { hot_refresh.invalidate(); return false; }
+  bbep.backupPlane();
+  hot_refresh.completed(full, millis());
+  Log_info(full ? "MOSIR: full refresh" : "MOSIR: partial refresh");
+  return true;
+}
+
+bool display_show_hot_png(uint8_t *data, int size, bool forceFull) {
+  if (!data || size < 33 || size >= MAX_IMAGE_SIZE) return false;
+  // Native-size 1-bit grayscale PNGs only. No implicit conversion or panel mode changes.
+  if (parsePNGHeader(data, size) != PNG_NO_ERR || data[24] != 1 || data[25] != 0 || data[28] != 0) return false;
+  std::unique_ptr<PNG> decoder(new (std::nothrow) PNG());
+  if (!decoder) return false;
+  if (decoder->openRAM(data, size, png_draw) != PNG_SUCCESS) return false;
+  if (decoder->getWidth() != display_width() || decoder->getHeight() != display_height()) {
+    decoder->close(); return false;
+  }
+  bbep.setMode(BB_MODE_1BPP);
+  int rc = decoder->decode(nullptr, 0);
+  decoder->close();
+  if (rc != PNG_SUCCESS) { hot_refresh.invalidate(); return false; }
+  return hot_refresh_panel(forceFull);
+}
+
+bool display_hot_clean() {
+  if (hot_refresh.valid() && hot_refresh.full(millis(), HOT_MAX_PARTIALS, HOT_IDLE_CLEAN_MS))
+    return hot_refresh_panel(true);
+  return true;
+}
+#endif

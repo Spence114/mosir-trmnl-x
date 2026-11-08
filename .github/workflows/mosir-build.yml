@@ -1,0 +1,55 @@
+name: MOSIR TRMNL X
+on:
+  push:
+    branches: [mosir/x-hot-mode]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  controls:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify stock controls and hot-mode policies
+        run: |
+          python3 tests/mosir/check_stock_controls.py
+          g++ -std=c++11 -Wall -Wextra -Werror -I lib/trmnl/include tests/mosir/policy_test.cpp -o /tmp/mosir-tests
+          /tmp/mosir-tests
+  firmware:
+    runs-on: ubuntu-latest
+    needs: controls
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: mosir-x-pio-${{ hashFiles('platformio.ini', 'sdkconfigs/sdkconfig.TRMNL_X') }}
+      - name: Install build tools
+        run: pip install platformio==6.1.19
+      - name: Build application
+        env:
+          INCLUDE_GIT_HASH_IN_VERSION_NUMBER: 'true'
+        run: |
+          pio pkg install -e TRMNL_X_hot
+          pio run -e TRMNL_X_hot
+      - name: Stage application and provenance
+        run: |
+          mkdir -p artifacts
+          cp .pio/build/TRMNL_X_hot/firmware.bin artifacts/mosir-trmnl-x-app.bin
+          cp .pio/build/TRMNL_X_hot/firmware.elf artifacts/
+          cp docs/MOSIR.md artifacts/
+          git rev-parse HEAD > artifacts/source-commit.txt
+          sha256sum artifacts/mosir-trmnl-x-app.bin > artifacts/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mosir-trmnl-x-${{ github.sha }}
+          path: artifacts/
+          retention-days: 30

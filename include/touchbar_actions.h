@@ -26,4 +26,7 @@ void touchbar_redraw_pending_indicator(void);
 // the check timed out instead, leaving its screen up for the caller to replace.
 bool touchbar_poll_ship_check(void);
 
+#if defined(HOT_MODE)
+void touchbar_dispatch_live(uint8_t channel, bool held);
+#endif
 #endif // TOUCHBAR_ACTIONS_H

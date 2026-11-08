@@ -1,4 +1,5 @@
 #include <ArduinoLog.h>
+#include <mosir_hot.h>
 #include <Preferences.h>
 #include <WiFi.h>
 #include <api-client/header.h>
@@ -581,8 +582,12 @@ https_request_err_e downloadAndShow(float batteryVoltage) {
 
   submitStoredLogs();
 
-  WiFi.disconnect(true); // no need for WiFi, save power starting here
-  Log.info("%s [%d]: Received successfully; WiFi off.\r\n", __FILE__, __LINE__);
+  if (!mosir_hot_eligible()) {
+    WiFi.disconnect(true);
+    Log.info("%s [%d]: Received successfully; WiFi off.\r\n", __FILE__, __LINE__);
+  } else {
+    Log_info("MOSIR: keeping native Wi-Fi connected for USB mode");
+  }
 
   bool image_reverse = false;
   if (isPNG)
