@@ -22,7 +22,8 @@ int main() {
   // Wrap-around timing and bounded queue overflow.
   g.reset();g.poll(2,UINT32_MAX-999);g.poll(2,1000);assert(g.take(e)&&e.held);
   g.reset();for(int i=0;i<12;++i){g.poll(1,i*10);g.poll(0,i*10+1);}
-  for(int i=0;i<8;++i)assert(g.take(e));assert(!g.take(e));
+  for(int i=0;i<8;++i) { assert(g.take(e)); }
+  assert(!g.take(e));
   RefreshBudget b;assert(b.full(0,40,20000));b.completed(true,0);
   for(int i=0;i<40;++i){assert(!b.full(i+1,40,20000));b.completed(false,i+1);}
   assert(b.full(41,40,20000));b.completed(true,50);
