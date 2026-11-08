@@ -12,7 +12,12 @@ struct Gesture { uint8_t channel; bool held; };
 // The caller supplies synchronization. Overflow drops newest events, never overwrites old ones.
 class Gestures {
 public:
-  void reset() { *this = Gestures(); }
+  void reset(uint8_t alreadyDown = 0) {
+    *this = Gestures();
+    for (uint8_t c = 0; c < 3; ++c) {
+      down_[c] = fired_[c] = (alreadyDown & (1 << c)) != 0;
+    }
+  }
   void poll(uint8_t mask, uint32_t now) {
     for (uint8_t c = 0; c < 3; ++c) {
       bool down = mask & (1 << c);

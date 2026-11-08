@@ -68,7 +68,9 @@ static bool hot_gestures_enabled = false;
 bool iqs323_task_hot_gestures(bool enable) {
     if (!iqs323_mutex || xSemaphoreTake(iqs323_mutex, pdMS_TO_TICKS(50)) != pdTRUE) return false;
     hot_gestures_enabled = enable;
-    hot_gestures.reset();
+    hot_gestures.reset((g_touchbar_snapshot.ch0_touch ? 1 : 0) |
+                       (g_touchbar_snapshot.ch1_touch ? 2 : 0) |
+                       (g_touchbar_snapshot.ch2_touch ? 4 : 0));
     xSemaphoreGive(iqs323_mutex);
     return true;
 }

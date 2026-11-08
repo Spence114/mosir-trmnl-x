@@ -2797,7 +2797,7 @@ bool display_show_hot_png(uint8_t *data, int size, bool forceFull) {
     decoder->close(); return false;
   }
   bbep.setMode(BB_MODE_1BPP);
-  int rc = decoder->decode(nullptr, 0);
+  int rc = decoder->decode(nullptr, PNG_CHECK_CRC);
   decoder->close();
   if (rc != PNG_SUCCESS) { hot_refresh.invalidate(); return false; }
   return hot_refresh_panel(forceFull);

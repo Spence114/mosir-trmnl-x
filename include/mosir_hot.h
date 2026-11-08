@@ -1,5 +1,6 @@
 #pragma once
 #include <types.h>
+#include <stdint.h>
 #if defined(BOARD_TRMNL_X) && defined(HOT_MODE)
 bool mosir_hot_eligible();
 void mosir_hot_run(https_request_err_e initialResult);

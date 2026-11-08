@@ -16,6 +16,9 @@ int main() {
     g.poll(1<<c,2100);assert(g.take(e)&&e.channel==c&&e.held);
     g.poll(1<<c,7000);g.poll(0,7010);assert(!g.take(e));
   }
+  // A hold already dispatched before a menu/handler return cannot become a second gesture.
+  g.reset(2); g.poll(2,3000); g.poll(0,3100); assert(!g.take(e));
+  g.poll(2,3200); g.poll(0,3250); assert(g.take(e)&&e.channel==1&&!e.held);
   // Events survive delayed consumption during network I/O; order and hold classification are retained.
   g.reset();g.poll(1,0);g.poll(0,50);g.poll(2,100);g.poll(2,2100);g.poll(0,2150);
   assert(g.take(e)&&e.channel==0&&!e.held);assert(g.take(e)&&e.channel==1&&e.held);assert(!g.take(e));
