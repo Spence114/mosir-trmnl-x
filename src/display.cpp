@@ -2782,14 +2782,16 @@ static bool hot_refresh_panel(bool forceFull) {
   if (rc != BBEP_SUCCESS) { hot_refresh.invalidate(); return false; }
   bbep.backupPlane();
   hot_refresh.completed(full, millis());
-  Log_info(full ? "MOSIR: full refresh" : "MOSIR: partial refresh");
+  Log_info_serial(full ? "MOSIR: full refresh" : "MOSIR: partial refresh");
   return true;
 }
 
 bool display_show_hot_png(uint8_t *data, int size, bool forceFull) {
   if (!data || size < 33 || size >= MAX_IMAGE_SIZE) return false;
   // Native-size 1-bit grayscale PNGs only. No implicit conversion or panel mode changes.
-  if (parsePNGHeader(data, size) != PNG_NO_ERR || data[24] != 1 || data[25] != 0 || data[28] != 0) return false;
+  static const uint8_t signature[] = {0x89, 'P', 'N', 'G', 13, 10, 26, 10};
+  if (memcmp(data, signature, 8) || memcmp(data + 12, "IHDR", 4) ||
+      data[24] != 1 || data[25] != 0 || data[28] != 0) return false;
   std::unique_ptr<PNG> decoder(new (std::nothrow) PNG());
   if (!decoder) return false;
   if (decoder->openRAM(data, size, png_draw) != PNG_SUCCESS) return false;

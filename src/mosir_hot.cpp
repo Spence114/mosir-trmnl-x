@@ -81,7 +81,7 @@ void cacheFrame(const String &name, Body &image) {
   filesystem_fix_filename(name.c_str(), path);
   filesystem_purge_old_file(path);
   if (filesystem_write_to_file(path, image.data, image.size) != image.size) {
-    Log_error("MOSIR: final frame cache failed; retaining previous cache"); return;
+    Log_error_serial("MOSIR: final frame cache failed; retaining previous cache"); return;
   }
   String previous = preferences.getString(PREFERENCES_CURRENT_PATH_KEY, "");
   if (!previous.isEmpty() && previous != path) preferences.putString(PREFERENCES_LAST_PATH_KEY, previous);
@@ -102,7 +102,7 @@ void mosir_hot_run(https_request_err_e initialResult) {
   if ((initialResult != HTTPS_SUCCESS && initialResult != HTTPS_NO_ERR) || !mosir_hot_eligible()) return;
   if (!iqs323_task_set_streaming_mode(true)) return;
   if (!iqs323_task_hot_gestures(true)) { iqs323_task_set_streaming_mode(false); return; }
-  Log_info("MOSIR: hot mode started (USB, native Wi-Fi, server opt-in)");
+  Log_info_serial("MOSIR: hot mode started (USB, native Wi-Fi, server opt-in)");
   String lastName = apiDisplayResult.response.filename;
   Body latest;
   auto inputs = createApiHeaders();
@@ -157,6 +157,6 @@ void mosir_hot_run(https_request_err_e initialResult) {
   iqs323_task_set_streaming_mode(false);
   cacheFrame(lastName, latest);
   display_hot_invalidate();
-  Log_info("MOSIR: hot mode ended; returning to stock sleep");
+  Log_info_serial("MOSIR: hot mode ended; returning to stock sleep");
 }
 #endif

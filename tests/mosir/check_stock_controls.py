@@ -4,6 +4,7 @@ root=pathlib.Path(__file__).resolve().parents[2]
 base='4ffa33acbe317e559aa50ee505ffa5fe4ed0272d'
 protected=['src/menu.cpp','src/qa.cpp','src/cached_images.cpp','src/sleep_session.cpp',
  'lib/trmnl_x/src/touchbar_gesture.cpp','lib/trmnl_x/include/touchbar_gesture.h',
+ 'lib/trmnl_x/src/rtc_wake_stub_trmnl_x.cpp','lib/trmnl_x/src/rtc_wake_stub_i2c.cpp',
  'src/power/tca9535_power.cpp','boards/trmnl_x_partitions.csv','boards/esp32s3_n16r8.json',
  'sdkconfigs/sdkconfig.TRMNL_X']
 for path in protected:
@@ -28,3 +29,10 @@ for path,names in {
 original=subprocess.check_output(['git','show',f'{base}:platformio.ini'],cwd=root)
 assert (root/'platformio.ini').read_bytes().startswith(original)
 print('Stock v1.8.18 gesture dispatcher, menu, sleep/power controls, partitions, SDK settings, and existing environments match.')
+
+# Streaming refresh logs must never use the persistent logger on each frame.
+hot=(root/'src/mosir_hot.cpp').read_text()
+assert 'Log_info(' not in hot and 'Log_error(' not in hot
+display=(root/'src/display.cpp').read_text()
+assert 'Log_info(' not in function(display,'hot_refresh_panel')
+assert 'parsePNGHeader' not in function(display,'display_show_hot_png')
